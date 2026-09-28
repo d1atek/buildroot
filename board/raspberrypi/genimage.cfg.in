@@ -2,6 +2,7 @@ image boot.vfat {
 	vfat {
 		files = {
 #BOOT_FILES#
+		"Image",
 		}
 	}
 
