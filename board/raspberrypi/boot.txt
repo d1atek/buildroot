@@ -1,0 +1,12 @@
+setenv ipaddr 192.168.1.2
+setenv serverip 172.17.10.5
+
+setenv bootmenu_timeout 3
+setenv bootmenu_0 "1. Afficher la version de U-Boot=version; pause; bootmenu"
+setenv bootmenu_1 "2. Afficher les infos de la carte=bdinfo; pause; bootmenu"
+setenv bootmenu_2 "3. Ping le serveur (Hôte)=ping ${serverip}; pause; bootmenu"
+setenv bootmenu_3 "4. Boot Linux (Kernel et RootFS depuis carte SD)=setenv bootargs root=/dev/mmcblk0p2 rootwait console=ttyS0,115200; fatload mmc 0:1 ${kernel_addr_r} Image; booti ${kernel_addr_r} - ${fdt_addr}"
+setenv bootmenu_4 "5. Boot Linux (Kernel via TFTP, RootFS via NFS)=setenv bootargs root=/dev/nfs nfsroot=${serverip}:/workspace/nfs-rootfs,v3,tcp rw ip=${ipaddr}:${serverip}::255.255.255.0::eth0:off rootwait console=ttyS0,115200; tftp ${kernel_addr_r} Image; booti ${kernel_addr_r} - ${fdt_addr}"
+setenv bootmenu_5 "6. Reset=reset"
+
+bootmenu
