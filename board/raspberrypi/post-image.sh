@@ -19,6 +19,8 @@ if [ ! -e "${GENIMAGE_CFG}" ]; then
 	KERNEL=$(sed -n 's/^kernel=//p' "${BINARIES_DIR}/rpi-firmware/config.txt")
 	FILES+=( "${KERNEL}" )
 
+	FILES+=( "kernel.itb" )
+
 	BOOT_FILES=$(printf '\\t\\t\\t"%s",\\n' "${FILES[@]}")
 	sed "s|#BOOT_FILES#|${BOOT_FILES}|" "${BOARD_DIR}/genimage.cfg.in" \
 		> "${GENIMAGE_CFG}"
@@ -33,6 +35,9 @@ trap 'rm -rf "${ROOTPATH_TMP}"' EXIT
 ROOTPATH_TMP="$(mktemp -d)"
 
 rm -rf "${GENIMAGE_TMP}"
+
+cp board/raspberrypi/kernel.its "${BINARIES_DIR}/kernel.its"
+mkimage -f "${BINARIES_DIR}/kernel.its" "${BINARIES_DIR}/kernel.itb"
 
 genimage \
 	--rootpath "${ROOTPATH_TMP}"   \
