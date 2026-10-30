@@ -5,7 +5,7 @@
 ################################################################################
 
 OPENSSH_VERSION_MAJOR = 9.9
-OPENSSH_VERSION_MINOR = p2
+OPENSSH_VERSION_MINOR = p1
 OPENSSH_VERSION = $(OPENSSH_VERSION_MAJOR)$(OPENSSH_VERSION_MINOR)
 OPENSSH_CPE_ID_VERSION = $(OPENSSH_VERSION_MAJOR)
 OPENSSH_CPE_ID_UPDATE = $(OPENSSH_VERSION_MINOR)
@@ -52,7 +52,7 @@ OPENSSH_IGNORE_CVES += CVE-2026-60002
 OPENSSH_CONF_ENV = \
 	LD="$(TARGET_CC)" \
 	LDFLAGS="$(TARGET_CFLAGS)" \
-	LIBS=`$(PKG_CONFIG_HOST_BINARY) --libs openssl`
+	LIBS="`$(PKG_CONFIG_HOST_BINARY) --libs openssl` -lcrypt"
 OPENSSH_CPE_ID_VENDOR = openbsd
 OPENSSH_CONF_OPTS = \
 	--sysconfdir=/etc/ssh \
@@ -64,7 +64,15 @@ OPENSSH_CONF_OPTS = \
 	--disable-utmpx \
 	--disable-wtmp \
 	--disable-wtmpx \
-	--disable-strip
+	--disable-strip \
+	--with-hardening \
+	--with-pie
+
+define OPENSSH_CHANGE_VERSION_STRING
+	$(SED) 's/#define SSH_VERSION.*/#define SSH_VERSION "My_Extreme_SecureShell"/' $(@D)/version.h
+	$(SED) 's/#define SSH_PORTABLE.*/#define SSH_PORTABLE ""/' $(@D)/version.h
+endef
+OPENSSH_POST_PATCH_HOOKS += OPENSSH_CHANGE_VERSION_STRING
 
 OPENSSH_SELINUX_MODULES = ssh
 
@@ -84,7 +92,7 @@ ifeq ($(BR2_TOOLCHAIN_SUPPORTS_PIE),)
 OPENSSH_CONF_OPTS += --without-pie
 endif
 
-OPENSSH_DEPENDENCIES = host-pkgconf zlib openssl
+OPENSSH_DEPENDENCIES = host-pkgconf zlib openssl libxcrypt
 
 # crypt() in libcrypt only required for sshd.
 ifeq ($(BR2_PACKAGE_OPENSSH_SERVER)$(BR2_PACKAGE_LIBXCRYPT),yy)

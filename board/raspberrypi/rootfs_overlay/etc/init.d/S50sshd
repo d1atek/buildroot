@@ -1,0 +1,63 @@
+#!/bin/sh
+#
+# sshd        Starts sshd.
+#
+
+# Make sure the ssh-keygen progam exists
+[ -f /usr/bin/ssh-keygen ] || exit 0
+
+umask 077
+
+start() {
+	# Create keys with specific sizes if they don't exist already
+	if [ ! -f /etc/ssh/ssh_host_rsa_key ]; then
+		echo "Generating SSH RSA 4096 key..."
+		/usr/bin/ssh-keygen -q -t rsa -b 4096 -N "" -f /etc/ssh/ssh_host_rsa_key
+	fi
+	if [ ! -f /etc/ssh/ssh_host_dsa_key ]; then
+		echo "Generating SSH DSA 1024 key..."
+		/usr/bin/ssh-keygen -q -t dsa -b 1024 -N "" -f /etc/ssh/ssh_host_dsa_key 2>/dev/null || true
+	fi
+	if [ ! -f /etc/ssh/ssh_host_ecdsa_key ]; then
+		echo "Generating SSH ECDSA 521 key..."
+		/usr/bin/ssh-keygen -q -t ecdsa -b 521 -N "" -f /etc/ssh/ssh_host_ecdsa_key
+	fi
+	if [ ! -f /etc/ssh/ssh_host_ed25519_key ]; then
+		echo "Generating SSH ED25519 256 key..."
+		/usr/bin/ssh-keygen -q -t ed25519 -b 256 -N "" -f /etc/ssh/ssh_host_ed25519_key
+	fi
+
+	printf "Starting sshd: "
+	/usr/sbin/sshd
+	touch /var/lock/sshd
+	echo "OK"
+}
+
+stop() {
+	printf "Stopping sshd: "
+	killall sshd
+	rm -f /var/lock/sshd
+	echo "OK"
+}
+
+restart() {
+	stop
+	start
+}
+
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  restart|reload)
+  	restart
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?

@@ -1,0 +1,22 @@
+# 1. Utiliser uniquement IPv4
+AddressFamily inet
+ListenAddress 0.0.0.0
+
+# 2. Désactiver toutes les fonctionnalités de transfert (Forwarding)
+AllowTcpForwarding no
+AllowAgentForwarding no
+AllowStreamLocalForwarding no
+X11Forwarding no
+PermitTunnel no
+GatewayPorts no
+
+# 3. Autoriser le login root (pour le labo uniquement)
+PermitRootLogin yes
+
+# 4. Indiquer la bannière
+Banner /etc/ssh/banner
+
+# Spécifier explicitement les clés hôtes générées
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
