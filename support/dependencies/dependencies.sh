@@ -190,7 +190,8 @@ if test "${missing_progs}" = "yes" ; then
 	exit 1
 fi
 
-INSTALL_VERSION="$(install --version | sed -n 's/^install \(.*\)/\1/p')"
+INSTALL_PROG="$(which gnuinstall 2>/dev/null || which install)"
+INSTALL_VERSION="$(${INSTALL_PROG} --version 2>/dev/null | sed -n 's/^install \(.*\)/\1/p')"
 if [ "${INSTALL_VERSION}" = "(uutils coreutils) 0.8.0" ]; then
 	echo
 	echo "You have an uutils 'install' version installed which is affected by:"

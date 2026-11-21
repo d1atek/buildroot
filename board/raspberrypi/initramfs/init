@@ -1,0 +1,27 @@
+#!/bin/sh
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+# Montage des systèmes de fichiers virtuels du noyau
+mount -t proc none /proc
+mount -t sysfs none /sys
+mount -n -t devtmpfs devtmpfs /dev
+
+# Attendre que la partition LUKS sur la carte SD soit détectée (équivalent rootwait)
+while [ ! -b /dev/mmcblk0p3 ]; do
+    sleep 0.2
+done
+
+# Déverrouillage de la partition racine LUKS (Partition 3)
+echo "Unlocking LUKS encrypted rootfs on /dev/mmcblk0p3..."
+cryptsetup luksOpen --key-file /passphrase /dev/mmcblk0p3 luks_rootfs || exec sh
+
+# Montage du rootfs déchiffré et transfert de devtmpfs
+mount -t ext4 /dev/mapper/luks_rootfs /newroot || exec sh
+mount -n -t devtmpfs devtmpfs /newroot/dev
+
+# Nettoyage des montages temporaires avant switch_root
+umount /proc
+umount /sys
+
+# Bascule du PID 1 vers le système de fichiers déchiffré
+exec switch_root /newroot /sbin/init

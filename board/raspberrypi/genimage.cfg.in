@@ -3,6 +3,8 @@ image boot.vfat {
 		files = {
 #BOOT_FILES#
 		"Image",
+		"boot.scr",
+		"uInitrd",
 		}
 	}
 
@@ -22,5 +24,10 @@ image sdcard.img {
 	partition rootfs {
 		partition-type = 0x83
 		image = "rootfs.ext4"
+	}
+
+	partition rootfs_luks {
+		partition-type = 0x83
+		image = "rootfs.luks"
 	}
 }

@@ -253,7 +253,7 @@ else
 TARGET_STRIP = /bin/true
 STRIPCMD = $(TARGET_STRIP)
 endif
-INSTALL := $(shell which install || type -p install)
+INSTALL := $(shell which gnuinstall 2>/dev/null || which install || type -p install)
 UNZIP := $(shell which unzip || type -p unzip) -q
 
 APPLY_PATCHES = TAR="$(TAR)" PATH=$(HOST_DIR)/bin:$$PATH support/scripts/apply-patches.sh $(if $(QUIET),-s)

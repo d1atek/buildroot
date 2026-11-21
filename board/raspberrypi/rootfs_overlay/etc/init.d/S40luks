@@ -1,0 +1,24 @@
+#!/bin/sh
+case "$1" in
+  start)
+    if [ -b /dev/mapper/luks_rootfs ]; then
+      echo "LUKS partition already active as rootfs, skipping /mnt/luks mount."
+      exit 0
+    fi
+    echo "Opening and mounting LUKS partition..."
+    cryptsetup luksOpen --key-file /root/passphrase /dev/mmcblk0p3 luks_part3
+    mkdir -p /mnt/luks
+    mount /dev/mapper/luks_part3 /mnt/luks
+    ;;
+  stop)
+    if [ -b /dev/mapper/luks_part3 ]; then
+      echo "Unmounting and closing LUKS partition..."
+      umount /mnt/luks
+      cryptsetup luksClose luks_part3
+    fi
+    ;;
+  *)
+    echo "Usage: $0 {start|stop}"
+    exit 1
+    ;;
+esac

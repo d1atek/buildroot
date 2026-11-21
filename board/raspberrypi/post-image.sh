@@ -13,6 +13,7 @@ if [ ! -e "${GENIMAGE_CFG}" ]; then
 	FILES=()
 
 	for i in "${BINARIES_DIR}"/*.dtb "${BINARIES_DIR}"/rpi-firmware/*; do
+		[ "$(basename "${i}")" = "boot.scr" ] && continue
 		FILES+=( "${i#${BINARIES_DIR}/}" )
 	done
 
@@ -36,8 +37,30 @@ ROOTPATH_TMP="$(mktemp -d)"
 
 rm -rf "${GENIMAGE_TMP}"
 
-cp board/raspberrypi/kernel.its "${BINARIES_DIR}/kernel.its"
+cp "${BOARD_DIR}/kernel.its" "${BINARIES_DIR}/kernel.its"
 mkimage -f "${BINARIES_DIR}/kernel.its" "${BINARIES_DIR}/kernel.itb"
+
+# Generate InitRamFS (do NOT pre-create lib64 before cp -a since it is a symlink)
+INITRAMFS_DIR="${BUILD_DIR}/initramfs"
+rm -rf "${INITRAMFS_DIR}"
+mkdir -p "${INITRAMFS_DIR}"/{dev,etc,newroot,proc,run,sys}
+cp -a "${TARGET_DIR}"/{bin,sbin,lib,lib64,usr} "${INITRAMFS_DIR}/"
+cp "${BOARD_DIR}/initramfs/init" "${INITRAMFS_DIR}/init"
+chmod 755 "${INITRAMFS_DIR}/init"
+cp "${BOARD_DIR}/rootfs_overlay/root/passphrase" "${INITRAMFS_DIR}/passphrase"
+chmod 600 "${INITRAMFS_DIR}/passphrase"
+(cd "${INITRAMFS_DIR}" && find . | cpio -H newc -o -R 0:0 --quiet | gzip) > "${BINARIES_DIR}/initramfs.cpio.gz"
+mkimage -A arm64 -O linux -T ramdisk -C gzip -d "${BINARIES_DIR}/initramfs.cpio.gz" "${BINARIES_DIR}/uInitrd"
+
+cp "${BOARD_DIR}/boot.cmd" "${BINARIES_DIR}/boot.cmd"
+mkimage -C none -A arm64 -T script -d "${BINARIES_DIR}/boot.cmd" "${BINARIES_DIR}/boot.scr"
+
+if [ -f "passphrase/rootfs.luks" ]; then
+	cp passphrase/rootfs.luks "${BINARIES_DIR}/rootfs.luks"
+elif [ ! -f "${BINARIES_DIR}/rootfs.luks" ]; then
+	echo "ERROR: passphrase/rootfs.luks not found. Generate it first (see 6-codelab/repport.md)." >&2
+	exit 1
+fi
 
 genimage \
 	--rootpath "${ROOTPATH_TMP}"   \
